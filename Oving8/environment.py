@@ -110,8 +110,49 @@ class Environment:
             
 
         pygame.quit()
+    
+    def render_train(self):
+        pygame.init()
 
-if __name__ == "__main__":
-    model = Environment()
-    # print(np.multiply(model.player,30))
-    print(model.step(2))
+        q_table = np.random.uniform(low=-1, high=1, size=([len(self.rewards)] * 2 + [4]))
+        lr = 0.1
+        gamma = 0.95
+        epsilon = 0.2
+
+        screen = pygame.display.set_mode([600, 600])
+        pygame.display.set_caption("Gridworld")
+
+        black = (0, 0, 0)
+        white = (255, 255, 255)
+
+        done = False
+
+        while not done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:  # If user clicked close
+                    done = True
+
+            state = self.reset()
+
+            done1  = False
+            while not done1:
+                if(random.uniform(0, 1) < epsilon):
+                    action = self.random_action()
+                else:
+                    action = np.argmax(q_table[state])
+
+                next_state, reward, done1 = self.step(action)
+
+                old_value = q_table[state + (action, )]
+                next_max = np.max(q_table[next_state])
+                new_value = (1-lr)*old_value + lr * (reward + gamma * next_max )
+
+                q_table[state + (action, )] = new_value
+                state = next_state
+                sleep(0.001)
+                screen.fill(black)
+                drawGrid(screen, white, self.goal, self.player, q_table)
+                pygame.display.flip()
+            
+
+        pygame.quit()
